@@ -1,0 +1,651 @@
+/* Zuréa Desserts — "vitrina de noche": fondo azul marino como los anuncios,
+   pedidos como etiquetas marfil con esquinas recortadas y filete dorado. */
+:root {
+  /* Marca */
+  --noche: #0b1530;      /* fondo general */
+  --marino: #0d1a36;     /* barra, botones principales */
+  --marino-2: #15254a;   /* superficies sobre el fondo */
+  --marino-3: #24385f;   /* bordes y estados sobre marino */
+  --oro: #c79a5b;        /* filetes, acentos, acción principal */
+  --oro-claro: #e4c38f;
+  --oro-osc: #8f6430;
+  --cobre: #b5652a;      /* precios, como en los anuncios */
+  --marfil: #f7f0e3;     /* etiquetas y hojas */
+  --marfil-2: #ede2cf;
+  --chocolate: #4e3020;  /* texto sobre marfil */
+  --rosa: #d9708f;
+  /* Texto */
+  --tinta: #1a2238;
+  --gris: #776c5f;       /* secundario sobre marfil */
+  --niebla: #aab3c9;     /* secundario sobre marino */
+  --linea: #e0d2bb;
+  --blanco: #fff;
+  /* Alertas: deliberadamente distintas del dorado de la marca */
+  --amarillo: #f2b705;
+  --amarillo-fondo: #fff3c4;
+  --rojo: #d62839;
+  --rojo-fondo: #fde1e3;
+  --serif: 'Cormorant Garamond', Georgia, serif;
+  --cursiva: 'Allura', cursive;
+  --sans: 'Josefin Sans', system-ui, sans-serif;
+  font-family: var(--sans);
+  /* Números de altura completa: la serif usa números "antiguos" por defecto, poco legibles de lejos */
+  font-variant-numeric: lining-nums;
+  color: var(--marfil);
+  background: var(--noche);
+  -webkit-tap-highlight-color: transparent;
+}
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; }
+body { overscroll-behavior: none; }
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
+input, textarea { font: inherit; color: inherit; }
+h1, h2, h3 { margin: 0; }
+:focus-visible { outline: 3px solid var(--oro-claro); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+.app { display: flex; flex-direction: column; height: 100dvh; }
+.contenido { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
+.cargando { display: grid; place-items: center; height: 100dvh; background: var(--noche); }
+
+/* ---------- Recorte de etiqueta (esquinas cóncavas del recuadro de precio) ---------- */
+.recorte {
+  --n: 12px;
+  position: relative;
+  -webkit-mask:
+    radial-gradient(circle var(--n) at 0 0, #0000 98%, #000) top left,
+    radial-gradient(circle var(--n) at 100% 0, #0000 98%, #000) top right,
+    radial-gradient(circle var(--n) at 0 100%, #0000 98%, #000) bottom left,
+    radial-gradient(circle var(--n) at 100% 100%, #0000 98%, #000) bottom right;
+  -webkit-mask-size: 51% 51%;
+  -webkit-mask-repeat: no-repeat;
+  mask:
+    radial-gradient(circle var(--n) at 0 0, #0000 98%, #000) top left,
+    radial-gradient(circle var(--n) at 100% 0, #0000 98%, #000) top right,
+    radial-gradient(circle var(--n) at 0 100%, #0000 98%, #000) bottom left,
+    radial-gradient(circle var(--n) at 100% 100%, #0000 98%, #000) bottom right;
+  mask-size: 51% 51%;
+  mask-repeat: no-repeat;
+}
+/* Filete interior que sigue el recorte */
+.recorte::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: var(--filete-ancho, 1px) solid var(--filete, rgb(199 154 91 / 0.55));
+  pointer-events: none;
+  --m: calc(var(--n) - 4px);
+  -webkit-mask:
+    radial-gradient(circle var(--m) at 0 0, #0000 98%, #000) top left,
+    radial-gradient(circle var(--m) at 100% 0, #0000 98%, #000) top right,
+    radial-gradient(circle var(--m) at 0 100%, #0000 98%, #000) bottom left,
+    radial-gradient(circle var(--m) at 100% 100%, #0000 98%, #000) bottom right;
+  -webkit-mask-size: 51% 51%;
+  -webkit-mask-repeat: no-repeat;
+  mask:
+    radial-gradient(circle var(--m) at 0 0, #0000 98%, #000) top left,
+    radial-gradient(circle var(--m) at 100% 0, #0000 98%, #000) top right,
+    radial-gradient(circle var(--m) at 0 100%, #0000 98%, #000) bottom left,
+    radial-gradient(circle var(--m) at 100% 100%, #0000 98%, #000) bottom right;
+  mask-size: 51% 51%;
+  mask-repeat: no-repeat;
+}
+
+/* ---------- Logotipo ---------- */
+.marca { display: flex; flex-direction: column; align-items: center; line-height: 1; user-select: none; }
+.marca-nombre { font-family: var(--cursiva); font-size: 40px; color: var(--oro-claro); line-height: 0.9; padding: 0 4px; }
+.marca-sub { font-size: 10px; letter-spacing: 0.42em; text-transform: uppercase; color: var(--marfil); margin-top: 2px; padding-left: 0.42em; }
+.marca-grande .marca-nombre { font-size: 104px; }
+.marca-grande .marca-sub { font-size: 15px; margin-top: 8px; }
+
+.ornamento { display: flex; align-items: center; gap: 12px; color: var(--oro); width: 100%; }
+.ornamento-linea { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--oro)); }
+.ornamento-linea:last-child { background: linear-gradient(90deg, var(--oro), transparent); }
+.ornamento-centro { font-size: 13px; line-height: 1; }
+
+/* ---------- Barra superior ---------- */
+.barra { display: flex; align-items: center; gap: 28px; padding: 10px 22px; background: var(--marino); border-bottom: 1px solid rgb(199 154 91 / 0.45); }
+.menu { display: flex; gap: 6px; flex: 1; }
+.menu button { border: 0; background: none; padding: 14px 14px 10px; font-size: 16px; font-weight: 600; color: var(--niebla); border-bottom: 2px solid transparent; }
+.menu button.activo { color: var(--oro-claro); border-bottom-color: var(--oro); }
+
+/* ---------- Botones ---------- */
+.btn { border: 1px solid var(--linea); background: var(--blanco); color: var(--tinta); border-radius: 8px; padding: 11px 16px 9px; font-size: 16px; font-weight: 600; min-height: 44px; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; }
+.btn-primario { background: var(--marino); border-color: var(--marino); color: var(--marfil); }
+.btn-primario:active { background: var(--marino-3); }
+.btn-nuevo { display: inline-flex; align-items: center; gap: 10px; background: var(--oro); border-color: var(--oro); color: var(--noche); font-size: 21px; font-weight: 700; min-height: 62px; padding: 12px 28px 10px 20px; border-radius: 10px; box-shadow: 0 0 0 3px rgb(199 154 91 / 0.25); }
+.btn-nuevo-mas { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--noche); color: var(--oro-claro); font-size: 26px; line-height: 1; padding-top: 2px; }
+.btn-nuevo:active { background: var(--oro-claro); }
+.btn-peligro { color: var(--rojo); border-color: #f0c2c6; background: transparent; }
+.btn-grande { width: 100%; font-size: 18px; padding: 15px 14px 13px; }
+.btn-icono { padding: 8px 12px 6px; min-width: 44px; }
+.btn-mini { min-height: 36px; min-width: 36px; padding: 5px 10px 3px; font-size: 15px; }
+.btn-silenciar { background: var(--marino); color: var(--marfil); border-color: var(--marino); }
+
+/* ---------- Bandas de aviso ---------- */
+.banda { display: block; width: 100%; border: 0; padding: 11px 16px 9px; text-align: center; font-size: 16px; font-weight: 600; }
+.banda-sonido { background: var(--marino-2); color: var(--oro-claro); border-bottom: 1px solid var(--marino-3); }
+.banda-local { background: transparent; color: var(--niebla); font-weight: 400; font-size: 14px; padding: 6px; border-bottom: 1px dotted var(--marino-3); }
+.banda-error { background: var(--rojo-fondo); color: var(--rojo); }
+.banda-amarillo { background: var(--amarillo); color: var(--noche); }
+.banda-rojo { background: var(--rojo); color: var(--blanco); animation: parpadeo 1s infinite alternate; }
+@keyframes parpadeo { to { filter: brightness(1.15); } }
+
+/* ---------- Pestañas de día ---------- */
+.pestanas { display: flex; gap: 4px; padding: 10px 22px 0; overflow-x: auto; flex-shrink: 0; }
+.pestana { position: relative; display: flex; align-items: baseline; gap: 8px; border: 0; border-bottom: 2px solid transparent; background: none; padding: 10px 14px 8px; font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--niebla); white-space: nowrap; min-height: 48px; }
+.pestana.activa { color: var(--marfil); border-bottom-color: var(--oro); }
+.pestana-n { font-family: var(--sans); font-size: 14px; font-weight: 700; color: var(--noche); background: var(--oro); border-radius: 999px; padding: 3px 8px 1px; transform: translateY(-3px); }
+.pestana-atrasada { color: #ff9aa5; }
+.pestana-atrasada .pestana-n { background: var(--rojo); color: var(--blanco); }
+.pestana-fecha { font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--niebla); cursor: pointer; align-items: center; margin-left: 6px; }
+.pestana-fecha input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* ---------- Tablero ---------- */
+.tablero { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(250px, 1fr)); gap: 0; padding: 8px 10px 14px; overflow-x: auto; }
+.columna { display: flex; flex-direction: column; min-height: 0; padding: 0 10px; border-left: 1px solid rgb(199 154 91 / 0.18); }
+.columna:first-child { border-left: 0; }
+.columna h2 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 8px; margin-bottom: 10px; font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--marfil); border-bottom: 1px solid rgb(199 154 91 / 0.5); }
+.columna-entregado h2 { color: var(--niebla); }
+.contador { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--oro); }
+.columna-lista { flex: 1; overflow-y: auto; padding-bottom: 10px; display: flex; flex-direction: column; gap: 12px; }
+.columna-entregado .tarjeta { opacity: 0.6; }
+.vacio { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--niebla); text-align: center; padding: 28px 8px; font-size: 15px; }
+.vacio-adorno { color: var(--oro); font-size: 20px; }
+
+/* ---------- Tarjeta de pedido: la etiqueta ---------- */
+.tarjeta { --n: 11px; background: var(--marfil); color: var(--tinta); padding: 16px 18px 16px; display: flex; flex-direction: column; gap: 9px; transition: background 0.4s; flex-shrink: 0; }
+.tarjeta.nivel-amarillo { background: var(--amarillo-fondo); --filete: var(--amarillo); --filete-ancho: 3px; }
+.tarjeta.nivel-rojo, .tarjeta.nivel-atrasado { background: var(--rojo-fondo); --filete: var(--rojo); --filete-ancho: 3px; }
+.tarjeta.nivel-atrasado { --filete-ancho: 4px; }
+.tarjeta.sacudir { animation: sacudir 0.9s cubic-bezier(.36,.07,.19,.97); }
+@keyframes sacudir {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  10%, 50%, 90% { transform: translateX(-8px) rotate(-1.5deg); }
+  30%, 70% { transform: translateX(8px) rotate(1.5deg); }
+}
+.tarjeta-cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding-bottom: 9px; border-bottom: 1px solid rgb(199 154 91 / 0.45); }
+.tarjeta-titulo { font-family: var(--serif); font-size: 32px; font-weight: 700; line-height: 0.95; color: var(--noche); }
+.tarjeta-sub { color: var(--gris); font-size: 15px; margin-top: 4px; }
+.tarjeta-num { font-family: var(--serif); color: var(--oro-osc); font-size: 18px; font-weight: 700; }
+.tarjeta-entrega { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 15px; color: var(--chocolate); }
+.punto { width: 8px; height: 8px; transform: rotate(45deg); background: var(--oro); flex-shrink: 0; margin-bottom: 2px; }
+.punto-asap { background: var(--rosa); }
+.tarjeta-lineas { margin: 0; padding: 0; list-style: none; font-size: 16px; line-height: 1.5; }
+.tarjeta-lineas b { font-family: var(--serif); font-size: 20px; color: var(--cobre); }
+.tarjeta-notas { font-family: var(--serif); font-size: 18px; font-style: italic; color: var(--chocolate); line-height: 1.25; padding: 2px 0 2px 10px; border-left: 2px solid var(--oro); }
+.tarjeta-aviso { font-size: 13px; color: var(--gris); }
+.tarjeta-pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.tarjeta-total { font-family: var(--serif); font-weight: 700; font-size: 28px; color: var(--cobre); }
+.tarjeta-botones { display: flex; gap: 6px; }
+.tarjeta-botones .btn { white-space: nowrap; }
+.tarjeta .btn { background: transparent; border-color: var(--linea); }
+.tarjeta .btn-icono { min-width: 52px; min-height: 52px; font-size: 19px; }
+.tarjeta .btn-receta { min-height: 44px; font-size: 16px; }
+.tarjeta .btn-silenciar { background: var(--marino); color: var(--marfil); border-color: var(--marino); }
+.tarjeta .btn-siguiente { border: 0; border-radius: 6px; padding: 15px 14px 12px; font-size: 17px; font-weight: 700; color: var(--marfil); background: var(--marino); min-height: 54px; }
+.tarjeta .btn-siguiente:active { background: var(--marino-3); }
+.tarjeta .btn-siguiente.fase-entregado { background: var(--chocolate); }
+
+.timer { display: flex; flex-direction: column; gap: 5px; }
+.timer-barra { height: 8px; background: var(--marfil-2); border-radius: 999px; overflow: hidden; }
+.timer-barra > div { height: 100%; background: var(--marino-3); transition: width 1s linear; }
+.nivel-amarillo .timer-barra { background: #f8e3a0; }
+.nivel-amarillo .timer-barra > div { background: var(--amarillo); }
+.nivel-rojo .timer-barra, .nivel-atrasado .timer-barra { background: #f6c3c8; }
+.nivel-rojo .timer-barra > div, .nivel-atrasado .timer-barra > div { background: var(--rojo); }
+.timer-texto { font-size: 15px; font-variant-numeric: lining-nums tabular-nums; }
+.timer-texto b { font-size: 18px; }
+.nivel-atrasado .timer-texto { color: var(--rojo); font-weight: 700; }
+
+/* ---------- Modales ---------- */
+.modal-fondo { position: fixed; inset: 0; background: rgb(6 12 28 / 0.72); display: grid; place-items: center; padding: 16px; z-index: 10; }
+.modal { background: var(--marfil); color: var(--tinta); border-radius: 10px; width: min(1100px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgb(0 0 0 / 0.45); border: 1px solid rgb(199 154 91 / 0.6); }
+.modal-chico { width: min(560px, 100%); }
+.modal-cabeza { display: flex; justify-content: space-between; align-items: center; padding: 12px 22px; background: var(--marino); color: var(--marfil); border-bottom: 1px solid var(--oro); }
+.modal-cabeza h2 { font-family: var(--serif); font-size: 30px; font-weight: 700; color: var(--oro-claro); }
+.modal-cabeza .btn { background: transparent; border-color: var(--marino-3); color: var(--marfil); }
+.modal-cuerpo { padding: 18px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.modal-pie { display: flex; align-items: center; gap: 10px; padding: 12px 22px; border-top: 1px solid var(--linea); flex-wrap: wrap; background: var(--marfil-2); }
+.espacio { flex: 1; }
+.error { color: var(--rojo); font-weight: 600; width: 100%; }
+
+.form-pedido { display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px; }
+.form-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+/* Encabezado de sección: serif con filete que llena el renglón */
+.form-col h3 { display: flex; align-items: center; gap: 12px; font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--chocolate); margin-top: 4px; }
+.form-col h3::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--oro), transparent); }
+.fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fila > .campo { flex: 1; min-width: 140px; }
+.campo { display: flex; flex-direction: column; gap: 5px; font-size: 14px; color: var(--gris); font-weight: 600; }
+.campo input, .campo textarea, .fila > input, .chip-fecha { border: 1px solid var(--linea); border-radius: 8px; padding: 11px 12px 9px; font-size: 17px; color: var(--tinta); background: var(--blanco); min-height: 46px; }
+.campo-casa input { font-family: var(--serif); font-size: 28px; font-weight: 700; padding: 4px 12px; }
+.campo-precio { max-width: 140px; }
+.campo input:focus, .campo textarea:focus, .fila > input:focus { outline: 2px solid var(--oro); border-color: transparent; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.btn-producto { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; padding: 11px 12px 9px; min-height: 76px; background: var(--blanco); border-color: var(--linea); }
+.btn-producto:active { background: var(--marfil-2); }
+.producto-nombre { font-family: var(--serif); font-size: 21px; font-weight: 700; line-height: 1.05; color: var(--noche); }
+.producto-precio { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--cobre); margin-top: auto; }
+.producto-tamano { font-size: 12px; color: var(--gris); font-weight: 400; }
+.btn-cancelar { align-items: center; justify-content: center; color: var(--gris); }
+.variedades { background: var(--marino); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.variedades-titulo { font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--oro-claro); }
+.variedades .btn-producto { justify-content: center; font-family: var(--serif); font-size: 21px; font-weight: 700; color: var(--noche); }
+.variedades .btn-cancelar { background: transparent; border-color: var(--marino-3); color: var(--niebla); font-family: var(--sans); font-size: 16px; }
+.lineas { list-style: none; margin: 0; padding: 0; border: 1px solid var(--linea); border-radius: 8px; background: var(--blanco); }
+.lineas li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px dotted var(--linea); }
+.lineas li:last-child { border-bottom: 0; }
+.linea-nombre { flex: 1; font-weight: 600; }
+.linea-sub { width: 70px; text-align: right; font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--cobre); }
+.cantidad { display: flex; align-items: center; gap: 8px; }
+.cantidad b { min-width: 24px; text-align: center; font-size: 18px; }
+.cantidad input { width: 70px; text-align: center; border: 1px solid var(--linea); border-radius: 8px; padding: 7px 6px 5px; font-size: 17px; background: var(--blanco); }
+.total { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--chocolate); padding: 0 4px; }
+.total b { font-size: 38px; color: var(--cobre); }
+.segmentado { display: flex; background: var(--marfil-2); border-radius: 8px; padding: 4px; }
+.segmentado button { flex: 1; border: 0; background: none; padding: 13px 12px 10px; border-radius: 6px; font-weight: 700; font-size: 16px; color: var(--gris); }
+.segmentado button.activo { background: var(--marino); color: var(--marfil); }
+.programar { display: flex; flex-direction: column; gap: 8px; }
+.chip.activo, .chip-fecha.activo { background: var(--marino); color: var(--marfil); border-color: var(--marino); }
+.campo-timer { flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.ayuda { color: var(--gris); font-size: 14px; margin: 0; line-height: 1.45; }
+
+/* ---------- Formulario de pedido: pensado para usarse cocinando ---------- */
+.modal-pedido { width: min(1240px, 100%); height: 100%; }
+.modal-pedido .modal-cuerpo { flex: 1; }
+.btn-cerrar { min-width: 52px; min-height: 52px; font-size: 20px; }
+.paso { display: flex; flex-direction: column; gap: 10px; }
+.paso-n { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--marino); color: var(--oro-claro); font-family: var(--sans); font-size: 17px; font-weight: 700; padding-top: 2px; flex-shrink: 0; }
+.form-col h3 { font-size: 26px; }
+.quien { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.quien .campo-casa { flex: 0 0 200px; }
+.quien .campo { flex: 1; min-width: 180px; }
+.campo-casa input { font-size: 44px; text-align: center; min-height: 78px; letter-spacing: 0.04em; }
+.quien .campo:not(.campo-casa) input { min-height: 78px; font-size: 20px; }
+.btn-con-nombre { min-height: 78px; flex: 1; min-width: 160px; border-style: dashed; color: var(--gris); background: transparent; }
+.rejilla-grande { grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.rejilla-grande .btn-producto { position: relative; min-height: 104px; padding: 14px 14px 12px; border-width: 2px; }
+.rejilla-grande .producto-nombre { font-size: 23px; padding-right: 30px; }
+.btn-producto.con-cantidad { border-color: var(--marino); background: #fffdf8; }
+.producto-cuenta { position: absolute; top: 8px; right: 8px; min-width: 34px; height: 34px; padding: 3px 8px 0; border-radius: 999px; background: var(--marino); color: var(--oro-claro); font-weight: 700; font-size: 18px; display: grid; place-items: center; }
+.variedades-cabeza { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.btn-volver { min-height: 52px; min-width: 110px; font-size: 18px; background: var(--oro); border-color: var(--oro); color: var(--noche); }
+.variedades .rejilla-grande .btn-producto { min-height: 84px; justify-content: center; }
+.variedades .ayuda-oscura { color: var(--niebla); }
+.linea-nombre em { font-style: normal; color: var(--gris); }
+.cantidad-grande { gap: 10px; }
+.cantidad-grande .btn { min-width: 52px; min-height: 52px; font-size: 22px; padding: 6px 10px 4px; }
+.cantidad-grande b { font-size: 22px; min-width: 30px; }
+.lineas li { padding: 8px 12px; min-height: 68px; }
+.segmentado-grande button { min-height: 62px; font-size: 18px; }
+.dias { display: flex; gap: 8px; flex-wrap: wrap; }
+.dias .dia { min-height: 56px; min-width: 92px; font-size: 17px; }
+.dias .dia.activo { background: var(--marino); border-color: var(--marino); color: var(--marfil); }
+.dia-otra { position: relative; display: inline-flex; align-items: center; justify-content: center; color: var(--gris); border-style: dashed; cursor: pointer; }
+.dia-otra input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* Pago y cambio */
+.opcional { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--gris); }
+.efectivo { display: flex; flex-direction: column; gap: 10px; background: var(--marfil-2); border-radius: 10px; padding: 12px; }
+.paga-con { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.paga-con .btn { min-height: 58px; font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--noche); background: var(--blanco); }
+.paga-con .btn.activo { background: var(--oro); border-color: var(--oro); }
+.paga-otro { display: flex; align-items: center; gap: 4px; border: 1px solid var(--linea); border-radius: 8px; background: var(--blanco); padding: 0 10px; min-height: 58px; grid-column: span 2; }
+.paga-otro.activo { border: 2px solid var(--oro); }
+.paga-otro span { font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--gris); }
+.paga-otro input { flex: 1; min-width: 0; border: 0; background: none; font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--noche); padding: 8px 0 6px; }
+.paga-otro input:focus { outline: none; }
+.paga-otro:focus-within { outline: 2px solid var(--oro); }
+.cambio { display: flex; flex-direction: column; gap: 2px; background: var(--marino); color: var(--marfil); border-radius: 8px; padding: 12px 16px 10px; font-size: 19px; }
+.cambio b { font-family: var(--serif); font-size: 40px; line-height: 1; color: var(--oro-claro); }
+.cambio small { font-size: 14px; color: var(--niebla); }
+.cambio.sin-cambio { background: var(--blanco); color: var(--gris); border: 1px dashed var(--linea); font-size: 16px; }
+.cambio.sin-cambio b { font-size: 24px; color: var(--rojo); }
+.tarjeta-pago { font-size: 15px; font-weight: 600; color: var(--chocolate); }
+.tarjeta-pago.con-cambio { color: var(--noche); background: var(--amarillo-fondo); border-left: 3px solid var(--oro); padding: 5px 8px 3px; border-radius: 3px; }
+.cierre-pagos { padding-top: 10px; border-top: 1px dotted rgb(199 154 91 / 0.6); }
+
+/* Reloj táctil */
+.reloj { display: flex; flex-direction: column; gap: 12px; background: var(--marfil-2); border-radius: 10px; padding: 12px; }
+.reloj-turno { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.reloj-turno button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 64px; border: 2px solid var(--linea); background: var(--blanco); border-radius: 8px; font-size: 18px; font-weight: 700; color: var(--tinta); }
+.reloj-turno button b { font-size: 22px; letter-spacing: 0.04em; }
+.reloj-turno button small { font-weight: 600; font-size: 13px; color: var(--gris); }
+.reloj-turno button.activo { background: var(--marino); border-color: var(--marino); color: var(--marfil); }
+.reloj-turno button.activo small { color: var(--oro-claro); }
+.reloj-grupo { display: flex; flex-direction: column; gap: 6px; }
+.reloj-etiqueta { font-size: 14px; font-weight: 700; color: var(--gris); }
+.reloj-horas, .reloj-minutos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.reloj-horas button, .reloj-minutos button { min-height: 56px; border: 1px solid var(--linea); background: var(--blanco); border-radius: 8px; font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--noche); }
+.reloj-minutos button { font-size: 21px; }
+.reloj-horas button.activo, .reloj-minutos button.activo { background: var(--oro); border-color: var(--oro); color: var(--noche); }
+.reloj button:disabled { opacity: 0.3; }
+.entrega-resumen { display: flex; flex-direction: column; gap: 2px; font-size: 19px; color: var(--chocolate); background: var(--blanco); border: 2px solid var(--oro); border-radius: 8px; padding: 12px 14px 10px; }
+.entrega-resumen b { font-family: var(--serif); font-size: 24px; color: var(--noche); }
+.entrega-resumen small { font-size: 13px; color: var(--gris); }
+.entrega-resumen.pendiente { border-style: dashed; border-color: var(--linea); color: var(--gris); font-size: 17px; }
+.mas-opciones { border-top: 1px dotted var(--linea); padding-top: 10px; }
+.mas-opciones summary { cursor: pointer; font-size: 15px; color: var(--gris); min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.mas-opciones summary b { color: var(--tinta); }
+.mas-opciones .campo-timer { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.btn-pie { min-height: 60px; font-size: 18px; padding: 12px 22px 10px; }
+.btn-crear { min-width: 260px; font-size: 20px; }
+
+/* ---------- Páginas (Catálogo, Ajustes) ---------- */
+.pagina { padding: 26px 22px; display: flex; flex-direction: column; gap: 18px; }
+.pagina h1 { font-family: var(--serif); font-size: 52px; font-weight: 500; line-height: 1; color: var(--marfil); }
+.subtitulo { font-family: var(--cursiva); font-size: 34px; color: var(--oro); line-height: 1; margin-top: -4px; padding-left: 4px; }
+.pagina-angosta, .pagina:has(.carta) { max-width: 780px; width: 100%; margin: 0 auto; }
+.pagina-cabeza { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.pagina-cabeza .btn-primario { background: var(--oro); border-color: var(--oro); color: var(--noche); }
+
+/* La carta de postres */
+.carta { --n: 18px; background: var(--marfil); color: var(--tinta); padding: 22px 30px 20px; }
+
+.carta-lista { list-style: none; margin: 0; padding: 0; }
+.carta-lista li { border-bottom: 1px dotted rgb(143 100 48 / 0.45); }
+.carta-lista li:last-child { border-bottom: 0; }
+.carta-item { display: flex; flex-direction: column; gap: 3px; width: 100%; border: 0; background: none; text-align: left; padding: 14px 2px 12px; }
+.carta-item:active { background: var(--marfil-2); }
+.carta-linea { display: flex; align-items: baseline; gap: 10px; }
+.carta-nombre { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--noche); line-height: 1.1; }
+.carta-puntos { flex: 1; border-bottom: 2px dotted rgb(199 154 91 / 0.7); transform: translateY(-6px); min-width: 20px; }
+.carta-precio { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--cobre); }
+.carta-detalle { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 14px; color: var(--gris); }
+.carta-variedades { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--chocolate); }
+.carta-lista li.inactivo .carta-nombre, .carta-lista li.inactivo .carta-precio { color: var(--gris); }
+.carta-nota { text-align: center; margin-top: 14px; }
+.etiqueta { background: var(--marfil-2); color: var(--chocolate); border-radius: 4px; padding: 3px 7px 1px; font-size: 12px; font-weight: 600; }
+
+/* Paneles de ajustes */
+.panel { background: var(--marfil); color: var(--tinta); border-radius: 8px; padding: 20px 22px; display: flex; flex-direction: column; gap: 12px; }
+.panel h2 { font-family: var(--serif); font-size: 27px; font-weight: 700; color: var(--noche); }
+.input-num { width: 100px; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 16px; }
+.check input { width: 22px; height: 22px; accent-color: var(--marino); }
+.lista-correos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.lista-correos li { display: flex; justify-content: space-between; align-items: center; background: var(--blanco); border: 1px solid var(--linea); padding: 8px 12px; border-radius: 8px; }
+.lista-correos li.vacio { justify-content: center; color: var(--gris); }
+.aviso-modo { background: var(--marfil-2); color: var(--chocolate); padding: 9px 12px 7px; border-radius: 6px; margin: 0; font-size: 14px; }
+
+/* ---------- Reportes ---------- */
+.pagina-reportes { max-width: 1180px; width: 100%; margin: 0 auto; }
+.reporte-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.reporte-acciones .btn-primario { background: var(--oro); border-color: var(--oro); color: var(--noche); }
+.reporte-controles { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.segmentado-oscuro { background: var(--marino-2); border: 1px solid var(--marino-3); min-width: min(460px, 100%); }
+.segmentado-oscuro button { color: var(--niebla); }
+.segmentado-oscuro button.activo { background: var(--oro); color: var(--noche); }
+.reporte-nav { display: flex; gap: 6px; }
+.reporte-nav .btn { background: var(--marino-2); border-color: var(--marino-3); color: var(--marfil); }
+.reporte-nav .btn-icono { font-size: 26px; line-height: 1; padding: 4px 14px 8px; }
+.reporte-rango { display: flex; gap: 10px; }
+.reporte-rango .campo span { color: var(--niebla); }
+.reporte-rango .campo input { background: var(--marino-2); border-color: var(--marino-3); color: var(--marfil); color-scheme: dark; }
+.reporte-aviso { margin: 0; background: var(--rojo-fondo); color: var(--rojo); padding: 10px 14px 8px; border-radius: 6px; font-weight: 600; }
+.reporte { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 18px; align-items: start; }
+.reporte-detalle { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* El cierre: un comprobante con el mismo recorte que las etiquetas */
+.cierre { --n: 16px; background: var(--marfil); color: var(--tinta); padding: 26px 26px 20px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 0; }
+.cierre-marca { font-family: var(--cursiva); font-size: 34px; color: var(--oro-osc); text-align: center; line-height: 1; }
+.cierre-titulo { font-family: var(--serif); font-size: 24px; font-weight: 700; color: var(--noche); text-align: center; line-height: 1.15; padding-bottom: 12px; border-bottom: 1px solid rgb(199 154 91 / 0.5); }
+.cierre-cargando { text-align: center; }
+.cierre-total { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 4px; }
+.cierre-total span { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 20px; color: var(--chocolate); }
+.cierre-total b { font-family: var(--serif); font-size: 58px; font-weight: 700; line-height: 1; color: var(--cobre); }
+.cierre-filas { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.cierre-filas div { display: flex; align-items: baseline; gap: 8px; }
+.cierre-filas dt { font-size: 15px; color: var(--chocolate); }
+.cierre-filas div::after { content: ''; order: 1; flex: 1; border-bottom: 2px dotted rgb(199 154 91 / 0.7); transform: translateY(-4px); }
+.cierre-filas dd { order: 2; margin: 0; font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--noche); }
+.cierre-pendientes { margin: 0; font-size: 14px; line-height: 1.45; background: var(--amarillo-fondo); border-left: 3px solid var(--amarillo); padding: 8px 10px 6px; color: var(--tinta); }
+.cierre-nota { text-align: center; font-size: 13px; }
+
+.tabla-reporte { width: 100%; border-collapse: collapse; font-size: 16px; }
+.tabla-reporte th { text-align: left; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 18px; color: var(--gris); padding: 0 8px 6px; border-bottom: 1px solid rgb(199 154 91 / 0.5); }
+.tabla-reporte td { padding: 9px 8px 7px; border-bottom: 1px dotted var(--linea); vertical-align: baseline; }
+.tabla-reporte tbody tr:last-child td { border-bottom: 0; }
+.tabla-reporte tfoot td { border-top: 1px solid rgb(199 154 91 / 0.5); border-bottom: 0; font-family: var(--serif); font-size: 20px; font-weight: 700; }
+.tabla-reporte .num { text-align: right; white-space: nowrap; font-variant-numeric: lining-nums tabular-nums; }
+.tabla-reporte .monto { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--cobre); }
+.tabla-reporte .suave { color: var(--gris); font-size: 14px; }
+.tabla-reporte tr.sin-ventas td { color: var(--gris); }
+.dia-nombre { display: inline-block; min-width: 110px; }
+.barra-dia { display: inline-block; vertical-align: middle; width: calc(100% - 120px); max-width: 260px; height: 6px; background: var(--marfil-2); border-radius: 999px; overflow: hidden; }
+.barra-dia span { display: block; height: 100%; background: var(--oro); border-radius: 999px; }
+.pedidos-reporte summary { display: flex; align-items: baseline; gap: 10px; cursor: pointer; list-style: none; }
+.pedidos-reporte summary::-webkit-details-marker { display: none; }
+.pedidos-reporte summary::before { content: '▸'; color: var(--oro-osc); font-size: 18px; transition: transform 0.2s; }
+.pedidos-reporte[open] summary::before { transform: rotate(90deg); }
+.reporte-vacio { text-align: center; align-items: center; padding: 36px 22px; }
+
+/* ---------- Recetario ---------- */
+.pagina-recetario { max-width: 1180px; width: 100%; margin: 0 auto; }
+.ayuda-oscura { color: var(--niebla); }
+.recetario { display: grid; grid-template-columns: 250px 1fr; gap: 22px; align-items: start; }
+.recetario-indice { display: flex; flex-direction: column; position: sticky; top: 0; }
+.recetario-indice button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border: 0; background: none; padding: 12px 14px 10px; border-left: 2px solid rgb(199 154 91 / 0.25); color: var(--niebla); font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.1; }
+.recetario-indice button.activo { color: var(--marfil); border-left-color: var(--oro); background: linear-gradient(90deg, rgb(199 154 91 / 0.14), transparent); }
+.recetario-indice small { font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--oro); }
+
+.hoja { --n: 16px; background: var(--marfil); color: var(--tinta); padding: 24px 30px 22px; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.hoja-pedido { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--marino); color: var(--marfil); margin: -6px -10px 0; padding: 10px 14px 8px; border-radius: 4px; font-size: 16px; }
+.hoja-pedido b { font-family: var(--serif); font-size: 21px; color: var(--oro-claro); }
+.hoja-pedido .btn { background: transparent; border-color: var(--marino-3); color: var(--marfil); }
+.hoja-cabeza { padding-bottom: 12px; border-bottom: 1px solid rgb(199 154 91 / 0.5); }
+.hoja-cabeza h2 { font-family: var(--serif); font-size: 44px; font-weight: 700; line-height: 1; color: var(--noche); }
+.hoja-rinde { font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 20px; color: var(--chocolate); margin-top: 4px; }
+.hoja-variedades { display: flex; gap: 8px; flex-wrap: wrap; }
+.hoja-vacia { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 30px 0 14px; color: var(--gris); font-size: 17px; }
+.hoja-vacia p { margin: 0; }
+.hoja-seccion { display: flex; flex-direction: column; gap: 8px; }
+.hoja-seccion h3 { display: flex; align-items: center; gap: 12px; flex: 1; font-family: var(--serif); font-size: 25px; font-weight: 700; color: var(--chocolate); }
+.hoja-seccion > h3::after, .hoja-seccion-cabeza h3::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--oro), transparent); }
+.hoja-seccion-cabeza { display: flex; align-items: center; gap: 12px; }
+.progreso { font-weight: 700; font-size: 15px; color: var(--chocolate); background: var(--marfil-2); border-radius: 999px; padding: 5px 12px 3px; white-space: nowrap; }
+.progreso-listo { background: var(--marino); color: var(--oro-claro); }
+.ingredientes { margin: 0; padding: 0 0 0 4px; list-style: none; columns: 2 260px; column-gap: 30px; }
+.ingredientes li { padding: 6px 0 5px 18px; position: relative; font-size: 17px; line-height: 1.35; break-inside: avoid; }
+.ingredientes li::before { content: ''; position: absolute; left: 2px; top: 13px; width: 6px; height: 6px; background: var(--oro); transform: rotate(45deg); }
+.pasos { margin: 0; padding: 0 0 0 28px; display: flex; flex-direction: column; gap: 8px; font-size: 17px; line-height: 1.5; max-width: 72ch; }
+.pasos li::marker { font-family: var(--serif); font-weight: 700; font-size: 20px; color: var(--cobre); }
+.hoja-notas { margin: 0; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 19px; line-height: 1.45; color: var(--chocolate); max-width: 72ch; }
+.hoja-pie { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px dotted var(--linea); }
+.btn-preparar { min-width: 160px; font-size: 18px; }
+
+/* Lista para preparar: renglones grandes para tocar con las manos ocupadas */
+.checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.checklist li { border-bottom: 1px dotted var(--linea); }
+.checklist li:last-child { border-bottom: 0; }
+.checklist label { display: flex; align-items: center; gap: 16px; min-height: 60px; padding: 8px 4px; cursor: pointer; font-size: 19px; }
+.checklist input { position: absolute; opacity: 0; pointer-events: none; }
+.check-caja { flex-shrink: 0; width: 32px; height: 32px; border: 2px solid var(--oro); border-radius: 6px; background: var(--blanco); display: grid; place-items: center; transition: background 0.15s; }
+.check-caja::after { content: ''; width: 9px; height: 16px; border: solid var(--marfil); border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -2px) scale(0); transition: transform 0.15s; }
+.checklist input:focus-visible + .check-caja { outline: 3px solid var(--oro-claro); outline-offset: 2px; }
+.checklist .hecho .check-caja { background: var(--marino); border-color: var(--marino); }
+.checklist .hecho .check-caja::after { transform: rotate(45deg) translate(-1px, -2px) scale(1); }
+.check-texto { line-height: 1.3; text-decoration-thickness: 2px; text-decoration-color: var(--cobre); }
+.checklist .hecho .check-texto { text-decoration-line: line-through; color: var(--gris); }
+
+.hoja-editor .campo textarea { font-size: 17px; line-height: 1.45; resize: vertical; }
+
+/* Botón del pedido y selector de receta */
+.tarjeta .btn-receta { align-self: flex-start; border: 0; background: none; padding: 6px 0 4px; min-height: 36px; font-size: 15px; font-weight: 700; color: var(--oro-osc); text-decoration: underline; text-decoration-color: rgb(199 154 91 / 0.6); text-underline-offset: 4px; }
+.opciones-receta { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.opciones-receta .btn-producto { min-height: 84px; }
+
+/* ---------- Inventario ---------- */
+.pagina-inventario { max-width: 1000px; width: 100%; margin: 0 auto; }
+
+/* Aviso en la página de pedidos: cobre, distinto del amarillo/rojo de los temporizadores */
+.aviso-inventario { display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; margin: 12px 22px 0; padding: 10px 16px 8px; border: 1px solid rgb(228 195 143 / 0.5); border-left: 4px solid var(--oro); border-radius: 6px; background: rgb(181 101 42 / 0.18); color: var(--marfil); text-align: left; flex-shrink: 0; }
+.aviso-inventario.con-agotados { border-left-color: var(--cobre); background: rgb(181 101 42 / 0.32); }
+.aviso-inventario-titulo { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--oro-claro); white-space: nowrap; }
+.aviso-inventario-titulo em { font-style: normal; color: #ffb38a; }
+.aviso-inventario-lista { display: flex; flex-wrap: wrap; gap: 4px 16px; flex: 1; font-size: 15px; color: var(--niebla); }
+.aviso-item b { color: var(--marfil); font-weight: 700; }
+.aviso-item.nivel-agotado b { color: #ffb38a; }
+.aviso-inventario-ver { font-weight: 700; font-size: 15px; color: var(--oro-claro); text-decoration: underline; text-underline-offset: 4px; white-space: nowrap; }
+
+.por-acabarse { border: 1px solid rgb(228 195 143 / 0.45); border-left: 4px solid var(--oro); border-radius: 6px; background: rgb(181 101 42 / 0.16); padding: 14px 18px 10px; }
+.por-acabarse h2 { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--oro-claro); margin-bottom: 6px; }
+.por-acabarse ul { list-style: none; margin: 0; padding: 0; }
+.por-acabarse li { display: flex; align-items: center; gap: 12px; padding: 8px 0 6px; border-bottom: 1px dotted rgb(199 154 91 / 0.35); }
+.por-acabarse li:last-child { border-bottom: 0; }
+.bajo-nombre { font-family: var(--serif); font-size: 21px; font-weight: 700; color: var(--marfil); min-width: 180px; }
+.bajo-estado { flex: 1; color: var(--niebla); font-size: 15px; }
+.por-acabarse .nivel-agotado .bajo-estado { color: #ffb38a; font-weight: 700; }
+.por-acabarse .btn { background: var(--oro); border-color: var(--oro); color: var(--noche); }
+
+.alacena { --n: 16px; background: var(--marfil); color: var(--tinta); padding: 18px 26px 16px; }
+.alacena-buscar { width: 100%; border: 1px solid var(--linea); border-radius: 8px; padding: 11px 12px 9px; font-size: 17px; background: var(--blanco); margin-bottom: 6px; }
+.alacena-lista { list-style: none; margin: 0; padding: 0; }
+.insumo { display: grid; grid-template-columns: minmax(180px, 1.3fr) minmax(200px, 1fr) auto; align-items: center; gap: 8px 18px; padding: 12px 2px 10px; border-bottom: 1px dotted rgb(143 100 48 / 0.4); }
+.insumo:last-child { border-bottom: 0; }
+.insumo-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.insumo-nombre { font-family: var(--serif); font-size: 23px; font-weight: 700; color: var(--noche); line-height: 1.1; }
+.insumo-regla { font-size: 13px; color: var(--gris); }
+.insumo-conteo, .insumo-peso { display: flex; align-items: center; gap: 10px; }
+.insumo-cantidad { font-family: var(--serif); font-size: 28px; font-weight: 700; color: var(--noche); min-width: 64px; text-align: center; line-height: 1; }
+.insumo-cantidad small { display: block; font-family: var(--sans); font-size: 12px; font-weight: 600; color: var(--gris); margin-top: 3px; }
+.insumo-peso .insumo-cantidad { text-align: right; }
+.nivel-barra { position: relative; flex: 1; height: 10px; min-width: 80px; background: var(--marfil-2); border-radius: 999px; overflow: visible; }
+.nivel-barra span { position: absolute; left: 0; top: 0; display: block; height: 100%; background: var(--marino-3); border-radius: 999px; }
+.nivel-barra .nivel-antes { background: rgb(181 101 42 / 0.28); }
+.nivel-barra i { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--chocolate); opacity: 0.45; }
+.insumo-pct { font-weight: 700; font-size: 15px; min-width: 44px; text-align: right; }
+.insumo.nivel-bajo .insumo-cantidad, .insumo.nivel-bajo .insumo-pct { color: var(--cobre); }
+.insumo.nivel-bajo .nivel-barra span { background: var(--cobre); }
+.insumo.nivel-agotado .insumo-cantidad, .insumo.nivel-agotado .insumo-pct { color: var(--rojo); }
+.insumo.nivel-bajo .insumo-nombre::after, .insumo.nivel-agotado .insumo-nombre::after { content: 'por acabarse'; margin-left: 10px; vertical-align: middle; font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--marfil); background: var(--cobre); border-radius: 999px; padding: 3px 8px 1px; }
+.insumo.nivel-agotado .insumo-nombre::after { content: 'agotado'; background: var(--rojo); }
+.insumo-acciones { display: flex; gap: 6px; }
+.insumo-acciones .btn, .insumo-conteo .btn { background: var(--blanco); }
+.inventario-vacio { align-items: center; text-align: center; padding: 34px 22px; }
+.cambio-sale { color: var(--cobre); font-weight: 700; }
+.cambio-entra { color: #2f6b3a; font-weight: 700; }
+.campo-alerta { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+.sr-solo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.fila-centro { justify-content: center; }
+
+/* Último descuento: se ve qué bajó con la receta */
+.ultimo-descuento { --n: 14px; background: var(--marfil); color: var(--tinta); border-radius: 6px; border-top: 4px solid var(--cobre); padding: 16px 22px 12px; }
+.ultimo-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ultimo-cabeza h2 { font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--noche); }
+.ultimo-cabeza span { color: var(--gris); font-size: 14px; }
+.ultimo-detalle { margin: 2px 0 8px; font-family: var(--serif); font-style: italic; font-weight: 500; font-size: 19px; color: var(--chocolate); }
+.ultimo-descuento ul { list-style: none; margin: 0; padding: 0; }
+.ultimo-descuento li { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(170px, auto) minmax(90px, 160px) 110px; align-items: center; gap: 14px; padding: 7px 0 5px; border-bottom: 1px dotted var(--linea); font-size: 15px; }
+.ultimo-descuento li:last-child { border-bottom: 0; }
+.ultimo-nombre { font-weight: 700; }
+.ultimo-cambio { color: var(--gris); white-space: nowrap; }
+.ultimo-cambio b { color: var(--noche); }
+.nivel-barra-vacia { visibility: hidden; }
+.ultimo-estado { font-weight: 700; font-size: 13px; text-align: center; border-radius: 999px; padding: 4px 8px 2px; background: var(--marfil-2); color: var(--gris); }
+.ultimo-descuento .nivel-bajo .ultimo-estado { background: var(--cobre); color: var(--marfil); }
+.ultimo-descuento .nivel-agotado .ultimo-estado { background: var(--rojo); color: var(--blanco); }
+.ultimo-descuento .nivel-bajo .ultimo-cambio b { color: var(--cobre); }
+.ultimo-descuento .nivel-bajo .nivel-barra span:not(.nivel-antes) { background: var(--cobre); }
+.insumo.reciente { background: linear-gradient(90deg, rgb(181 101 42 / 0.12), transparent 70%); }
+.insumo-reciente { font-size: 13px; font-weight: 700; color: var(--cobre); }
+
+/* Descuento al terminar de preparar */
+.descontar { background: var(--marfil-2); border-radius: 6px; padding: 14px 16px 12px; }
+.descontar .cantidad b { font-family: var(--serif); font-size: 24px; }
+.descontar-hecho p { margin: 0; font-size: 16px; }
+.descontar-alerta { color: var(--cobre); font-weight: 700; }
+.descontar-nada { margin: 0; }
+.tabla-descuento td { font-size: 15px; }
+.tabla-descuento small { display: block; color: var(--rojo); font-weight: 700; font-size: 13px; }
+.tabla-descuento tr.quedara-bajo td:last-child { color: var(--cobre); font-weight: 700; }
+.tabla-descuento tr.no-alcanza td:last-child { color: var(--rojo); font-weight: 700; }
+.descontar-pie { display: flex; justify-content: flex-end; }
+
+/* Editor: descuento por tanda */
+.editor-consumo .campo-tanda { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.editor-consumo .cantidad input { width: 90px; }
+.consumo-filas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.consumo-filas li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.consumo-filas select { flex: 1; min-width: 160px; border: 1px solid var(--linea); border-radius: 8px; padding: 10px 10px 8px; font: inherit; font-size: 16px; background: var(--blanco); color: var(--tinta); min-height: 46px; }
+.consumo-filas li select:nth-of-type(2) { flex: 0 1 150px; min-width: 120px; }
+.consumo-unidad { min-width: 44px; color: var(--gris); font-weight: 600; }
+.btn-agregar { align-self: flex-start; }
+
+/* ---------- Respaldo ---------- */
+.panel-respaldo { border-top: 4px solid var(--oro); }
+.respaldo-ultimo { margin: 0; font-size: 16px; }
+.respaldo-ultimo b { font-family: var(--serif); font-size: 19px; }
+.respaldo-mensaje { margin: 0; padding: 9px 12px 7px; border-radius: 6px; font-weight: 600; font-size: 15px; }
+.respaldo-mensaje.ok { background: #e3efe3; color: #2f6b3a; }
+.respaldo-mensaje.error { background: var(--rojo-fondo); color: var(--rojo); }
+.respaldo-proteccion { margin: 0; font-size: 13px; color: var(--gris); padding-top: 8px; border-top: 1px dotted var(--linea); }
+.respaldo-proteccion.activa { color: #2f6b3a; }
+
+/* ---------- Login ---------- */
+.login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at 50% 0%, var(--marino-2), var(--noche) 70%); }
+.login-panel { width: min(420px, 100%); align-items: stretch; text-align: left; background: transparent; color: var(--marfil); padding: 0; border: 0; gap: 14px; }
+.login-panel .marca { margin-bottom: 6px; }
+.login-lema { text-align: center; margin: -2px 0 14px; font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--oro-claro); }
+.login-panel .campo span { color: var(--niebla); }
+.login-panel .campo input { background: var(--marino-2); border-color: var(--marino-3); color: var(--marfil); }
+.login-panel .btn-primario { background: var(--oro); border-color: var(--oro); color: var(--noche); margin-top: 8px; }
+.login-panel .error { color: #ff9aa5; }
+
+/* ---------- Tablet en vertical / pantallas angostas ---------- */
+@media (max-width: 900px) {
+  .form-pedido { grid-template-columns: 1fr; }
+  .barra { gap: 12px; padding: 8px 12px; }
+  .menu button { padding: 12px 8px 9px; font-size: 15px; }
+  .pestanas { padding: 8px 12px 0; }
+  .tablero { grid-template-columns: repeat(4, minmax(270px, 82vw)); scroll-snap-type: x mandatory; }
+  .columna { scroll-snap-align: start; }
+  .pagina { padding: 20px 14px; }
+  .carta { padding: 16px 18px; }
+  .reporte { grid-template-columns: 1fr; }
+  .cierre { position: static; }
+  .recetario { grid-template-columns: 1fr; gap: 14px; }
+  .recetario-indice { flex-direction: row; overflow-x: auto; position: static; border-bottom: 1px solid rgb(199 154 91 / 0.25); }
+  .recetario-indice button { border-left: 0; border-bottom: 2px solid transparent; white-space: nowrap; font-size: 19px; padding: 10px 12px 8px; }
+  .recetario-indice button.activo { border-bottom-color: var(--oro); background: none; }
+  .hoja { padding: 18px 18px 16px; }
+  .hoja-cabeza h2 { font-size: 36px; }
+  .menu { overflow-x: auto; }
+  .menu button { padding: 12px 6px 9px; font-size: 14px; white-space: nowrap; }
+  .btn-nuevo { padding: 10px 16px 8px 12px; font-size: 17px; min-height: 56px; white-space: nowrap; gap: 8px; }
+  .btn-nuevo-mas { width: 28px; height: 28px; font-size: 22px; }
+  .quien .campo-casa { flex: 1 1 160px; }
+  .btn-crear { min-width: 0; flex: 1; }
+  .modal-pedido { height: 100%; }
+  .modal-fondo { padding: 0; }
+  .modal-pedido { border-radius: 0; }
+  .aviso-inventario { margin: 10px 12px 0; }
+  .insumo { grid-template-columns: 1fr auto; }
+  .ultimo-descuento li { grid-template-columns: 1fr auto; }
+  .ultimo-descuento .nivel-barra { grid-column: 1; }
+  .insumo-acciones { grid-column: 1 / -1; justify-content: flex-end; }
+  .alacena { padding: 14px 16px; }
+}
+
+/* ---------- Impresión (reportes) ---------- */
+@media print {
+  @page { margin: 14mm; }
+  :root, body { background: #fff; color: #000; }
+  .app { height: auto; display: block; }
+  .contenido { overflow: visible; }
+  .barra, .banda, .no-imprimir { display: none !important; }
+  .pagina { padding: 0; }
+  .reporte { grid-template-columns: 1fr; }
+  .cierre, .panel { break-inside: avoid; border: 1px solid #ccc; -webkit-mask: none; mask: none; }
+  .cierre { position: static; }
+  .recorte::before { display: none; }
+  .pedidos-reporte::details-content { content-visibility: visible; display: contents; }
+  .pedidos-reporte summary::before { display: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
