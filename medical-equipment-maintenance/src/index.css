@@ -1,0 +1,40 @@
+@import "@fontsource/atkinson-hyperlegible/latin-400.css";
+@import "@fontsource/atkinson-hyperlegible/latin-700.css";
+@import "@fontsource/atkinson-hyperlegible/latin-ext-400.css";
+@import "@fontsource/atkinson-hyperlegible/latin-ext-700.css";
+@import "tailwindcss";
+
+/* Paleta clínica: cian hospitalario para acciones, fondos limpios y semáforo claro. */
+@theme {
+  --font-sans: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --color-papel: #eff5f6;      /* fondo: blanco clínico con un toque de cian */
+  --color-hoja: #ffffff;
+  --color-tinta: #12282e;      /* texto principal */
+  --color-gris: #55686d;       /* texto secundario */
+  --color-linea: #d2e1e4;
+  --color-primario: #0b7285;   /* acciones: cian hospitalario */
+  --color-primario-oscuro: #085a69;
+  --color-primario-suave: #ddf1f4;
+  --color-etiqueta: #f4c445;   /* le toca pronto */
+  --color-etiqueta-suave: #fdf4d6;
+  --color-rojo: #c2453a;       /* vencido / pérdida */
+  --color-rojo-suave: #fbe8e5;
+  --color-verde: #2e8a57;      /* al día / ganancia */
+  --color-verde-suave: #e0f3e7;
+}
+
+html { -webkit-text-size-adjust: 100%; font-size: 17px; }
+body {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.45;
+}
+:focus-visible { outline: 3px solid var(--color-primario); outline-offset: 2px; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* La hoja inferior sube al abrirse: responde a la acción del usuario. */
+@keyframes subir { from { transform: translateY(24px); opacity: 0 } to { transform: none; opacity: 1 } }
+.animar-subir { animation: subir 180ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .animar-subir { animation: none; } }
